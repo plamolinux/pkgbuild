@@ -3,6 +3,14 @@
 require 'fileutils'
 require 'optparse'
 
+def output_log(log)
+  puts "\e[32m#{log}\e[m\s"
+end
+
+def output_err(log)
+  warn "\e[31m#{log}\e[m\s"
+end
+
 class PlamoSrc
 
   attr_reader :remote_repo
@@ -138,11 +146,13 @@ class PkgBuild
 
   def ct_exist?(arch)
     command = "lxc-ls | grep pkgbuild_#{arch}"
+    output_log("execute #{command}")
     system(command)
   end
 
   def start_ct(arch)
     command = "lxc-start -n pkgbuild_#{arch}"
+    output_log("execute \"#{command}\"")
     system(command)
   end
 
@@ -159,47 +169,56 @@ class PkgBuild
   def build_pkg(pkg, arch)
     repo = PlamoSrc.new
     if !ct_running?(arch) then
+      output_log("container is not running. start container pkgbuild_#{arch}.")
       start_ct(arch)
     end
     common = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c )
 
+    # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
       command = %(#{common} "git clone #{repo.remote_repo}")
       if ! system(command) then
-        puts "git clone failed"
+        output_err("git clone failed")
         exit 1
       end
+
+    # sync master branch to be up to date
+    else
+      command = %!#{common} "( cd /Plamo-src && \
+        git checkout master && \
+        git pull origin master )"!
     end
 
+    # fetch branch to update package
     command = %!#{common} "( cd /Plamo-src && \
         git fetch origin #{repo.compare_branch} && \
         git checkout #{repo.compare_branch} )"!
     if ! system(command) then
-      puts "git fetch or checkout failed"
+      output_err("git fetch or checkout failed")
       exit 1
     end
 
     command = %!#{common} "( cd /Plamo-src/#{pkg} && ./PlamoBuild.* download )"!
     if ! system(command) then
-      puts "PlamoBuild download failed"
+      output_err("PlamoBuild download failed")
       exit 1
     end
 
     command = %!#{common} "( cd /Plamo-src/#{pkg} && ./PlamoBuild.* config )"!
     if ! system(command) then
-      puts "PlamoBuild config failed"
+      output_err("PlamoBuild config failed")
       exit 1
     end
 
     command = %!#{common} "( cd /Plamo-src/#{pkg} && ./PlamoBuild.* build )"!
     if ! system(command) then
-      puts "PlamoBuild config failed"
+      output_err("PlamoBuild config failed")
       exit 1
     end
 
     command = %!#{common} "( cd /Plamo-src/#{pkg} && ./PlamoBuild.* package )"!
     if ! system(command) then
-      puts "PlamoBuild config failed"
+      output_err("PlamoBuild config failed")
       exit 1
     end
   end
@@ -252,21 +271,22 @@ repo = PlamoSrc.new(config[:basedir],
                     config[:compare_branch],
                     config[:repo])
 if ! repo.exist? then
-  puts "Clone remote repository"
+  output_log("Clone remote repository")
   if repo.clone then
-    puts "clone done"
+    output_log("clone done")
   else
-    puts "clone error"
+    output_err("clone error")
   end
 end
 
 repo.fetch_compare_branch
 
 repo.get_update_pkgs.each{|pkg|
-  puts("create container for building #{pkg}")
+
   build = PkgBuild.new(pkg)
   config[:arch].each{|a|
     if !build.ct_exist?(a) then
+      output_log("create container for building #{pkg}")
       build.create_ct(a, {"-B" => config[:fstype]})
     end
     build.build_pkg(pkg, a)
