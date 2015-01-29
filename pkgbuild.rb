@@ -145,7 +145,7 @@ class PkgBuild
   end
 
   def ct_exist?(arch)
-    command = "lxc-ls | grep pkgbuild_#{arch}"
+    command = "lxc-info -n pkgbuild_#{arch} > /dev/null 2>&1"
     output_log("execute #{command}")
     system(command)
   end
