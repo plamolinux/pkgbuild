@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'optparse'
 
+# TODO: change to use Logger class
 def output_log(log)
   puts "\e[32m#{log}\e[m\s"
 end
@@ -33,6 +34,11 @@ class PlamoSrc
 
   def clone
     system("git clone #{@remote_repo}")
+  end
+
+  def update_local_repo
+    command = %!sh -c "( cd #{@local_repo} && git pull origin master )"!
+    system(command)
   end
 
   def fetch_compare_branch
@@ -125,6 +131,7 @@ class PkgBuild
         config.puts(line)
       end
       config.puts("lxc.network.type = none")
+      config.puts("lxc.mount.entry = #{ENV['HOME']}/.gnupg root/.gnupg none bind 0 0")
     }
     config.close
   end
@@ -142,6 +149,7 @@ class PkgBuild
     command = "#{env} lxc-create -n pkgbuild_#{arch} #{option} -t plamo -- -a #{arch} -r #{@release} -c"
     system(command)
     customize_ct_config(arch)
+    Dir.mkdir("/var/lib/lxc/pkgbuild_#{arch}/rootfs/root/.gnupg")
   end
 
   def ct_exist?(arch)
@@ -277,6 +285,9 @@ if ! repo.exist? then
   else
     output_err("clone error")
   end
+else
+  output_log("Update local repository")
+  repo.update_local_repo
 end
 
 repo.fetch_compare_branch
