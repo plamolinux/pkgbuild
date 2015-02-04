@@ -56,7 +56,7 @@ class PlamoSrc
 
   def delete_contrib
     @update_pkgs.each {|pkg|
-      if pkg.include?("contrib/") then
+      if pkg.include?("contrib/") || pkg.include?("admin/") then
         @update_pkgs.delete(pkg)
       end
     }
@@ -110,6 +110,7 @@ class PkgBuild
         break
       end
     }
+    output_log("Installed package to container is \"#{ct_category}\"")
     @ct_category = ct_category
   end
 
