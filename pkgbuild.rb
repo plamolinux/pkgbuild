@@ -37,8 +37,9 @@ class PlamoSrc
   end
 
   def update_local_repo
-    command = %!sh -c "( cd #{@local_repo} && git pull origin master )"!
-    system(command)
+    Dir.chdir(@local_repo) {
+      system("git pull origin master")
+    }
   end
 
   def fetch_compare_branch
