@@ -20,4 +20,5 @@ Usage: pkgbuild [options]
     -k, --keep                       keep the container
     -a, --arch=ARCH,ARCH,...         architecture(s) to create package
     -f, --fstype FSTYPE              type of filesystem that the container will be created
+    -i, --install                    install the created package into container
 ```
