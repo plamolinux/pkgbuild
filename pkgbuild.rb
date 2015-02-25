@@ -90,6 +90,7 @@ class PkgBuild
     @mirror_path = "/pub/linux/Plamo"
     @release = "5.x"
     @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat"
+    @ignore_pkgs = "firefox thunderbird"
   end
 
   def get_package_info
@@ -121,6 +122,7 @@ class PkgBuild
     env << %!MIRRORSRV="#{@mirror_srv}" !
     env << %!MIRRORPATH="#{@mirror_path}" !
     env << %!ADDONPKGS="#{@addon_pkgs}" !
+    env << %!IGNOREPKGS="#{@ignore_pkgs}" !
   end
 
   def customize_ct_config(arch)
