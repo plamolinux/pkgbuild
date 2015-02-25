@@ -204,7 +204,8 @@ class PkgBuild
     # fetch branch to update package
     command = %!#{common} "( cd /Plamo-src && \
         git fetch origin #{repo.compare_branch} && \
-        git checkout #{repo.compare_branch} )"!
+        git checkout #{repo.compare_branch} && \
+        git pull origin #{repo.compare_branch} )"!
     if ! system(command) then
       output_err("git fetch or checkout failed")
       exit 1
@@ -242,6 +243,16 @@ class PkgBuild
     FileUtils.copy(fullpath, "./#{pkgfile}")
   end
 
+  def install_package(arch)
+    path_in_container = "/Plamo-src/#{@package_path}/*-P*.txz"
+    command = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c "updatepkg -f #{path_in_container}")
+    output_log("exec command: #{command}")
+    if ! system(command) then
+      output_err("#{command} failed")
+      exit 1
+    end
+  end
+  
 end
 
 opts = OptionParser.new
@@ -262,6 +273,7 @@ opts.on("-r", "--repository=DIR",
         "directory name of local repository") {|r|
   config[:repo] = r
 }
+config[:keep_container] = false
 opts.on("-k", "--keep",
         "keep the container") {|k|
   config[:keep_container] = true
@@ -275,6 +287,11 @@ config[:fstype] = "dir"
 opts.on("-f", "--fstype FSTYPE",
         "type of filesystem that the container will be created") {|f|
   config[:fstype] = f
+}
+config[:install] = false
+opts.on("-i", "--install",
+        "install the created package into container") {|i|
+  config[:install] = true
 }
 
 opts.parse!(ARGV)
@@ -306,6 +323,9 @@ repo.get_update_pkgs.each{|pkg|
     end
     build.build_pkg(pkg, a)
     build.save_package(a)
+    if config[:install] then
+      build.install_package(a)
+    end
     if !config[:keep_container] then
       build.destroy_ct(a)
     end
