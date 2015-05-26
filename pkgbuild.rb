@@ -33,17 +33,20 @@ class PlamoSrc
   end
 
   def clone
+    output_log("git clone #{@remote_repo}")
     system("git clone #{@remote_repo}")
   end
 
   def update_local_repo
     Dir.chdir(@local_repo) {
+      output_log("git pull origin master")
       system("git pull origin master")
     }
   end
 
   def fetch_compare_branch
     Dir.chdir(@local_repo) {
+      output_log("git fetch origin #{@compare_branch}")
       system("git fetch origin #{@compare_branch}")
     }
   end
@@ -51,6 +54,7 @@ class PlamoSrc
   def get_update_dirs
     Dir.chdir(@local_repo) {
       pkgs = `git diff --dirstat master origin/#{@compare_branch} | awk '{ print $2 }'`
+      output_log("update pkg list is '#{pkgs}'")
       @update_pkgs = pkgs.split("\n")
     }
   end
