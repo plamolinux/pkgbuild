@@ -167,7 +167,7 @@ class PkgBuild
   end
 
   def start_ct(arch)
-    command = "lxc-start -n pkgbuild_#{arch}"
+    command = "lxc-start -n pkgbuild_#{arch} -d"
     output_log("execute \"#{command}\"")
     system(command)
   end
