@@ -215,6 +215,12 @@ class PkgBuild
       exit 1
     end
 
+    command = %!#{common} "( stat /Plamo-src/#{pkg} )"!
+    if ! system(command) then
+      output_err("#{pkg} is not exists.")
+      return 1
+    end
+
     command = %!#{common} "( cd /Plamo-src/#{pkg} && ./PlamoBuild.* download )"!
     if ! system(command) then
       output_err("PlamoBuild download failed")
@@ -325,7 +331,9 @@ repo.get_update_pkgs.each{|pkg|
       output_log("create container for building #{pkg}")
       build.create_ct(a, {"-B" => config[:fstype]})
     end
-    build.build_pkg(pkg, a)
+    if build.build_pkg(pkg, a)
+      next
+    end
     build.save_package(a)
     if config[:install] then
       build.install_package(a)
