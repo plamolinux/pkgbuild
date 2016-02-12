@@ -252,7 +252,12 @@ class PkgBuild
     fullpath = Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-P*.txz").at(0)
     p fullpath
     pkgfile = File.basename(fullpath)
-    FileUtils.copy(fullpath, "./#{pkgfile}")
+    begin
+      FileUtils.copy(fullpath, "./#{pkgfile}")
+    rescue
+      return false
+    end
+    return true
   end
 
   def install_package(arch)
@@ -336,7 +341,9 @@ repo.get_update_pkgs.each{|pkg|
     if build.build_pkg(pkg, a, config[:compare_branch], config[:repo])
       next
     end
-    build.save_package(a)
+    if ! build.save_package(a)
+      output_err("copy package failed")
+    end
     if config[:install] then
       build.install_package(a)
     end
