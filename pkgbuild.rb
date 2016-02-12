@@ -14,8 +14,8 @@ end
 
 class PlamoSrc
 
-  attr_reader :remote_repo
-  attr_reader :compare_branch
+  attr_accessor :remote_repo
+  attr_accessor :compare_branch
 
   def initialize(basedir=".",
                  compare_branch="updatepkg",
@@ -24,7 +24,7 @@ class PlamoSrc
 
     @basedir = basedir
     @remote_repo = remote_repo
-    @compare_branch = "updatepkg"
+    @compare_branch = compare_branch
     @local_repo = "#{@basedir}/#{repo}"
   end
 
@@ -182,8 +182,10 @@ class PkgBuild
     system(command)
   end
 
-  def build_pkg(pkg, arch)
+  def build_pkg(pkg, arch, branch, remote_repo)
     repo = PlamoSrc.new
+    repo.compare_branch = branch
+    repo.remote_repo = remote_repo
     if !ct_running?(arch) then
       output_log("container is not running. start container pkgbuild_#{arch}.")
       start_ct(arch)
@@ -331,7 +333,7 @@ repo.get_update_pkgs.each{|pkg|
       output_log("create container for building #{pkg}")
       build.create_ct(a, {"-B" => config[:fstype]})
     end
-    if build.build_pkg(pkg, a)
+    if build.build_pkg(pkg, a, config[:compare_branch], config[:repo])
       next
     end
     build.save_package(a)
