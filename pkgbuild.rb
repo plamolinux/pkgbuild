@@ -182,10 +182,9 @@ class PkgBuild
     system(command)
   end
 
-  def build_pkg(pkg, arch, branch, remote_repo)
+  def build_pkg(pkg, arch, branch)
     repo = PlamoSrc.new
     repo.compare_branch = branch
-    repo.remote_repo = remote_repo
     if !ct_running?(arch) then
       output_log("container is not running. start container pkgbuild_#{arch}.")
       start_ct(arch)
@@ -195,6 +194,7 @@ class PkgBuild
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
       command = %(#{common} "git clone #{repo.remote_repo}")
+      output_log("execute \"#{command}\"")
       if ! system(command) then
         output_err("git clone failed")
         exit 1
@@ -338,7 +338,7 @@ repo.get_update_pkgs.each{|pkg|
       output_log("create container for building #{pkg}")
       build.create_ct(a, {"-B" => config[:fstype]})
     end
-    if build.build_pkg(pkg, a, config[:compare_branch], config[:repo])
+    if build.build_pkg(pkg, a, config[:compare_branch])
       next
     end
     if ! build.save_package(a)
