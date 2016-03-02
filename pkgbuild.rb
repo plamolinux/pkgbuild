@@ -140,6 +140,7 @@ class PkgBuild
       end
       config.puts("lxc.network.type = none")
       config.puts("lxc.mount.entry = #{ENV['HOME']}/.gnupg root/.gnupg none bind 0 0")
+      config.puts("lxc.mount.entry = /etc/resolv.conf etc/resolv.conf none bind 0 0")
     }
     config.close
   end
