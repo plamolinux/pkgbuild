@@ -13,12 +13,14 @@ At this time, this needs to run by root.
 
 ```
 # ./pkgbuild.rb -h
+./pkgbuild.rb -h
 Usage: pkgbuild [options]
-    -b, --branch BRANCH              branch that compare with master branch.
-        --basedir=DIR                directory under that repository is cloned.
-    -r, --repository=DIR             directory name of local repository
-    -k, --keep                       keep the container
-    -a, --arch=ARCH,ARCH,...         architecture(s) to create package
-    -f, --fstype FSTYPE              type of filesystem that the container will be created
-    -i, --install                    install the created package into container
+-b, --branch BRANCH              branch that compare with master branch.
+--basedir=DIR                directory under that repository is cloned.
+-r, --repository=DIR             directory name of local repository
+-k, --keep                       keep the container
+-a, --arch=ARCH,ARCH,...         architecture(s) to create package
+-R, --release RELEASE            Specify release version
+-f, --fstype FSTYPE              type of filesystem that the container will be created
+-i, --install                    install the created package into container
 ```
