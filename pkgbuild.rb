@@ -92,9 +92,9 @@ class PkgBuild
     @package_path = path
     @mirror_srv = "repository.plamolinux.org"
     @mirror_path = "/pub/linux/Plamo"
-    @release = "5.x"
+    @release = "6.x"
     @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat"
-    @ignore_pkgs = "firefox thunderbird"
+    @ignore_pkgs = "firefox thunderbird kernel kmod kernel_headers"
   end
 
   def get_package_info
@@ -301,6 +301,11 @@ opts.on("-a", "--arch=ARCH,ARCH,...", Array,
         "architecture(s) to create package") {|a|
   config[:arch] = a
 }
+config[:release] = "6.x"
+opts.on("-R", "--release RELEASE",
+        "Specify release version") {|release|
+  config[:release] = release
+}
 config[:fstype] = "dir"
 opts.on("-f", "--fstype FSTYPE",
         "type of filesystem that the container will be created") {|f|
@@ -334,6 +339,7 @@ repo.fetch_compare_branch
 repo.get_update_pkgs.each{|pkg|
 
   build = PkgBuild.new(pkg)
+  build.release = config[:release]
   config[:arch].each{|a|
     if !build.ct_exist?(a) then
       output_log("create container for building #{pkg}")
