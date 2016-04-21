@@ -53,7 +53,7 @@ class PlamoSrc
 
   def get_update_dirs
     Dir.chdir(@local_repo) {
-      pkgs = `git diff --dirstat master origin/#{@compare_branch} | awk '{ print $2 }'`
+      pkgs = `git diff --dirstat=0 master origin/#{@compare_branch} | awk '{ print $2 }'`
       output_log("update pkg list is '#{pkgs}'")
       @update_pkgs = pkgs.split("\n")
     }
