@@ -94,7 +94,7 @@ class PkgBuild
     @mirror_path = "/pub/linux/Plamo"
     @release = "6.x"
     @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat"
-    @ignore_pkgs = "firefox thunderbird kernel kmod kernel_headers"
+    @ignore_pkgs = "firefox thunderbird kernel kmod"
   end
 
   def get_package_info
