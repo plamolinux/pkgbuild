@@ -16,6 +16,7 @@ class PlamoSrc
 
   attr_accessor :remote_repo
   attr_accessor :compare_branch
+  attr_accessor :update_pkgs
 
   def initialize(basedir=".",
                  compare_branch="updatepkg",
@@ -60,10 +61,14 @@ class PlamoSrc
   end
 
   def delete_contrib
+    del_pkgs = Array.new
     @update_pkgs.each {|pkg|
-      if pkg.include?("contrib/") || pkg.include?("admin/") then
-        @update_pkgs.delete(pkg)
+      if (pkg.include?("contrib/") || pkg.include?("admin/")) then
+        del_pkgs << pkg
       end
+    }
+    del_pkgs.each {|pkg|
+      @update_pkgs.delete(pkg)
     }
   end
 
@@ -71,6 +76,7 @@ class PlamoSrc
   def get_update_pkgs
     get_update_dirs
     delete_contrib
+    return @update_pkgs
   end
 
 end
