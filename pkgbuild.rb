@@ -99,7 +99,7 @@ class PkgBuild
     @mirror_srv = "repository.plamolinux.org"
     @mirror_path = "/pub/linux/Plamo"
     @release = "6.x"
-    @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat"
+    @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat plamo/05_ext/docbook.txz/libxslt plamo/05_ext/docbook.txz/docbook_xml_4.1.2 plamo/05_ext/docbook.txz/docbook_xsl"
     @ignore_pkgs = "firefox thunderbird kernel kmod"
   end
 
@@ -227,6 +227,11 @@ class PkgBuild
     command = %!#{common} "( stat /Plamo-src/#{pkg} )"!
     if ! system(command) then
       output_err("#{pkg} is not exists.")
+      return 1
+    end
+
+    command = %!#{common} "( ls /Plamo-src/#{pkg}/PlamoBuild.* )"!
+    if ! system(command) then
       return 1
     end
 
