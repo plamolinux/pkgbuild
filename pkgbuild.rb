@@ -93,13 +93,15 @@ class PkgBuild
   attr_accessor :mirror_path
   attr_accessor :release
   attr_accessor :addon_pkgs
+  attr_accessor :ct_loglevel
 
-  def initialize(path)
+  def initialize(path, addon="")
     @package_path = path
     @mirror_srv = "repository.plamolinux.org"
     @mirror_path = "/pub/linux/Plamo"
     @release = "6.x"
-    @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat plamo/05_ext/docbook.txz/libxslt plamo/05_ext/docbook.txz/docbook_xml_4.1.2 plamo/05_ext/docbook.txz/docbook_xsl"
+    @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat #{addon}"
+    p @addon_pkgs
     @ignore_pkgs = "firefox thunderbird kernel kmod"
   end
 
@@ -110,7 +112,7 @@ class PkgBuild
   end
 
   def define_ct_category
-    ct_category = "00_base 01_minimum "
+    ct_category = "00_base 01_minimum 05_ext/docbook.txz"
     if @package_category == "00_base" ||
        @package_category == "01_minimum" then
       @ct_category = ct_category
@@ -142,6 +144,7 @@ class PkgBuild
     File.open(path + ".orig") {|io|
       while line = io.gets
         line.sub!(%r(^lxc.network.), "#lxc.network.")
+        line.sub!(%r(^lxc.net.), "#lxc.net.")
         config.puts(line)
       end
       config.puts("lxc.network.type = none")
@@ -161,7 +164,7 @@ class PkgBuild
         option << key << " " << val
       }
     end
-    command = "#{env} lxc-create -n pkgbuild_#{arch} #{option} -t plamo -- -a #{arch} -r #{@release} -c"
+    command = "#{env} lxc-create -n pkgbuild_#{arch} #{option} -t plamo -l #{@ct_loglevel} -- -a #{arch} -r #{@release} -c"
     system(command)
     customize_ct_config(arch)
     Dir.mkdir("/var/lib/lxc/pkgbuild_#{arch}/rootfs/root/.gnupg")
@@ -174,7 +177,7 @@ class PkgBuild
   end
 
   def start_ct(arch)
-    command = "lxc-start -n pkgbuild_#{arch} -d"
+    command = "lxc-start -n pkgbuild_#{arch} -d -l #{@ct_loglevel}"
     output_log("execute \"#{command}\"")
     system(command)
   end
@@ -185,8 +188,19 @@ class PkgBuild
   end
 
   def destroy_ct(arch)
-    command = "lxc-stop -n pkgbuild_#{arch} ; lxc-destroy -n pkgbuild_#{arch}"
-    system(command)
+    command = "lxc-stop -n pkgbuild_#{arch} -l #{@ct_loglevel}"
+    if ! system(command) then
+      output_err("Failed to stop container pkgbuild_#{arch}")
+      exit 1
+    end
+    output_log("container pkgbuild_#{arch} has been stopped.")
+    command = "lxc-destroy -n pkgbuild_#{arch} -l #{@ct_loglevel}"
+    if system(command) then
+      output_log("container pkgbuild_#{arch} has been destroyed.")
+    else
+      output_err("Failed to destroy container pkgbuild_#{arch}")
+      exit 1
+    end
   end
 
   def build_pkg(pkg, arch, branch)
@@ -327,6 +341,16 @@ opts.on("-i", "--install",
         "install the created package into container") {|i|
   config[:install] = true
 }
+config[:appendpkg] = ""
+opts.on("-A", "--append-pkgs APPEND",
+        "additional packages to be installed") {|append|
+  config[:appendpkg] = append
+}
+config[:loglevel] = "INFO"
+opts.on("-l", "--logpriority LEVEL",
+        "loglevel given to the container") {|loglevel|
+  config[:loglevel] = loglevel
+}
 
 opts.parse!(ARGV)
 
@@ -349,8 +373,9 @@ repo.fetch_compare_branch
 
 repo.get_update_pkgs.each{|pkg|
 
-  build = PkgBuild.new(pkg)
+  build = PkgBuild.new(pkg, config[:appendpkg])
   build.release = config[:release]
+  build.ct_loglevel = config[:loglevel]
   config[:arch].each{|a|
     if !build.ct_exist?(a) then
       output_log("create container for building #{pkg}")
