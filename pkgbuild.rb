@@ -112,7 +112,7 @@ class PkgBuild
   end
 
   def define_ct_category
-    ct_category = "00_base 01_minimum 05_ext/docbook.txz"
+    ct_category = "00_base 01_minimum 05_ext/docbook.txz "
     if @package_category == "00_base" ||
        @package_category == "01_minimum" then
       @ct_category = ct_category
