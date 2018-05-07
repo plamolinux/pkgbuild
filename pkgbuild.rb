@@ -19,12 +19,14 @@ class PlamoSrc
   attr_accessor :update_pkgs
 
   def initialize(basedir=".",
+                 orig_branch="plamo-7.x",
                  compare_branch="updatepkg",
                  repo="Plamo-src",
                  remote_repo="https://github.com/plamolinux/Plamo-src.git")
 
     @basedir = basedir
     @remote_repo = remote_repo
+    @orig_branch = orig_branch
     @compare_branch = compare_branch
     @local_repo = "#{@basedir}/#{repo}"
   end
@@ -34,14 +36,14 @@ class PlamoSrc
   end
 
   def clone
-    output_log("git clone #{@remote_repo}")
-    system("git clone #{@remote_repo}")
+    output_log("git clone #{@remote_repo} && cd #{@local_repo} && git checkout -b #{@orig_branch} origin/#{@orig_branch}")
+    system("git clone #{@remote_repo} && cd #{@local_repo} && git checkout -b #{@orig_branch} origin/#{@orig_branch}")
   end
 
   def update_local_repo
     Dir.chdir(@local_repo) {
-      output_log("git pull origin master")
-      system("git pull origin master")
+      output_log("git checkout -b #{@orig_branch} origin/#{@orig_branch} || git checkout #{@orig_branch} && git pull origin #{@orig_branch}")
+      system("git checkout -b #{@orig_branch} origin/#{@orig_branch} || git checkout #{@orig_branch} && git pull origin #{@orig_branch}")
     }
   end
 
@@ -54,7 +56,7 @@ class PlamoSrc
 
   def get_update_dirs
     Dir.chdir(@local_repo) {
-      pkgs = `git diff --dirstat=0 master origin/#{@compare_branch} | awk '{ print $2 }'`
+      pkgs = `git diff --dirstat=0 #{@orig_branch} origin/#{@compare_branch} | awk '{ print $2 }'`
       output_log("update pkg list is '#{pkgs}'")
       @update_pkgs = pkgs.split("\n")
     }
@@ -105,6 +107,10 @@ class PkgBuild
     @ignore_pkgs = "firefox thunderbird kernel kmod"
   end
 
+  def get_lxc_version
+    return IO.popen("lxc-ls --version").getc.to_i
+  end
+
   def get_package_info
     dir_array = @package_path.split("/")
     @package_name = dir_array[dir_array.length - 1]
@@ -147,7 +153,11 @@ class PkgBuild
         line.sub!(%r(^lxc.net.), "#lxc.net.")
         config.puts(line)
       end
-      config.puts("lxc.network.type = none")
+      if get_lxc_version >= 3
+        config.puts("lxc.net.0.type = none")
+      else
+        config.puts("lxc.network.type = none")
+      end
       config.puts("lxc.mount.entry = #{ENV['HOME']}/.gnupg root/.gnupg none bind 0 0")
       config.puts("lxc.mount.entry = /etc/resolv.conf etc/resolv.conf none bind 0 0")
     }
@@ -168,6 +178,8 @@ class PkgBuild
     system(command)
     customize_ct_config(arch)
     Dir.mkdir("/var/lib/lxc/pkgbuild_#{arch}/rootfs/root/.gnupg")
+    File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1")
+    File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1.tradnet")
   end
 
   def ct_exist?(arch)
@@ -221,11 +233,11 @@ class PkgBuild
         exit 1
       end
 
-    # sync master branch to be up to date
+    # sync #{@orig_branch} branch to be up to date
     else
       command = %!#{common} "( cd /Plamo-src && \
-        git checkout master && \
-        git pull origin master )"!
+        git checkout #{@orig_branch} && \
+        git pull origin #{@orig_branch} )"!
     end
 
     # fetch branch to update package
@@ -295,7 +307,7 @@ class PkgBuild
       exit 1
     end
   end
-  
+
 end
 
 opts = OptionParser.new
@@ -303,8 +315,13 @@ config = Hash.new
 
 config[:compare_branch] = "updatepkg"
 opts.on("-b", "--branch BRANCH",
-        "branch that compare with master branch.") {|b|
+        "branch that compare with original branch.") {|b|
   config[:compare_branch] = b
+}
+config[:orig_branch] = "plamo-7.x"
+opts.on("-o", "--orig ORIG_BRANCH",
+        "original branch") {|o|
+  config[:orig_branch] = o
 }
 config[:basedir] = "."
 opts.on("--basedir=DIR",
@@ -355,6 +372,7 @@ opts.on("-l", "--logpriority LEVEL",
 opts.parse!(ARGV)
 
 repo = PlamoSrc.new(config[:basedir],
+                    config[:orig_branch],
                     config[:compare_branch],
                     config[:repo])
 if ! repo.exist? then
