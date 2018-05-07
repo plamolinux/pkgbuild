@@ -85,9 +85,6 @@ end
 
 class PkgBuild
 
-  @@category = ["02_x11", "03_xclassics", "04_xapps",
-                "05_ext", "06_xfce", "07_kde", "11_mate", "08_tex"]
-
   attr_reader :package_name
   attr_reader :package_category
   attr_reader :ct_category
@@ -97,12 +94,20 @@ class PkgBuild
   attr_accessor :addon_pkgs
   attr_accessor :ct_loglevel
 
-  def initialize(path, addon="")
+  def initialize(path, release, addon="")
     @package_path = path
     @mirror_srv = "repository.plamolinux.org"
     @mirror_path = "/pub/linux/Plamo"
-    @release = "6.x"
-    @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat #{addon}"
+    @release = release
+    if @release == "6.x" then
+      @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat #{addon}"
+      @@category = ["02_x11", "03_xclassics", "04_xapps",
+                    "05_ext", "06_xfce", "07_kde", "11_mate", "08_tex"]
+    elsif @release == "7.x" then
+      @addon_pkgs = "#{addon}"
+      @@category = ["03_libs", "04_x11", "05_ext", "06_xapps", "07_multimedia", "08_daemons",
+                    "10_xfce", "11_lxqt", "12_mate", "13_tex" "16_virtualization"]
+    end
     p @addon_pkgs
     @ignore_pkgs = "firefox thunderbird kernel kmod"
   end
@@ -118,9 +123,14 @@ class PkgBuild
   end
 
   def define_ct_category
-    ct_category = "00_base 01_minimum 05_ext/docbook.txz "
+    if @release == "6.x" then
+      ct_category = "00_base 01_minimum 05_ext/docbook.txz "
+    elsif @release == "7.x" then
+      ct_category = "00_base 01_minimum 02_devel 09_printings"
+    end
     if @package_category == "00_base" ||
-       @package_category == "01_minimum" then
+       @package_category == "01_minimum" ||
+       @package_category == "02_devel" then
       @ct_category = ct_category
       return
     end
@@ -391,8 +401,7 @@ repo.fetch_compare_branch
 
 repo.get_update_pkgs.each{|pkg|
 
-  build = PkgBuild.new(pkg, config[:appendpkg])
-  build.release = config[:release]
+  build = PkgBuild.new(pkg, config[:release], config[:appendpkg])
   build.ct_loglevel = config[:loglevel]
   config[:arch].each{|a|
     if !build.ct_exist?(a) then
