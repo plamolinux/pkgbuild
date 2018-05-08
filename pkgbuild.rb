@@ -20,7 +20,7 @@ class PlamoSrc
 
   def initialize(basedir=".",
                  orig_branch="plamo-7.x",
-                 compare_branch="updatepkg",
+                 compare_branch="update-7.x",
                  repo="Plamo-src",
                  remote_repo="https://github.com/plamolinux/Plamo-src.git")
 
@@ -125,21 +125,49 @@ class PkgBuild
   def define_ct_category
     if @release == "6.x" then
       ct_category = "00_base 01_minimum 05_ext/docbook.txz "
-    elsif @release == "7.x" then
-      ct_category = "00_base 01_minimum 02_devel 09_printings"
-    end
-    if @package_category == "00_base" ||
-       @package_category == "01_minimum" ||
-       @package_category == "02_devel" then
-      @ct_category = ct_category
-      return
-    end
-    @@category.each{|c|
-      ct_category << "#{c} "
-      if c == @package_category
-        break
+      if @package_category == "00_base" ||
+         @package_category == "01_minimum" ||
+         @package_category == "02_devel" then
+        @ct_category = ct_category
+        return
       end
-    }
+      @@category.each{|c|
+        ct_category << "#{c} "
+        if c == @package_category
+          break
+        end
+      }
+    elsif @release == "7.x" then
+      ct_category = "00_base 01_minimum 02_devel 09_printings "
+      case @package_category
+      when "03_libs" then
+        ct_category << "03_libs "
+      when "04_x11" then
+        ct_category << "03_libs 04_x11 "
+      when "05_ext" then
+        ct_category << "03_libs 04_x11 05_ext "
+      when "06_xapps" then
+        ct_category << "03_libs 04_x11 05_ext 06_xapps "
+      when "07_multimedia" then
+        ct_category << "03_libs 04_x11 05_ext 06_xapps 07_multimedia "
+      when "08_daemons" then
+        ct_category << "03_libs 05_ext 08_daemons "
+        @ignore_pkgs << "gpicview keybinder libfm libfm_extra lxappearance \
+                lxappearance_obconf lxde_common lxde_icon_theme lxinput \
+                lxmenu_data lxpanel lxrandr lxsession lxtask lxterminal \
+                menu_cache pcmanfm"
+      when "10_xfce" then
+        ct_category << "03_libs 04_x11 05_ext 06_xapps 07_multimedia 10_xfce "
+      when "11_lxqt" then
+        ct_category << "03_libs 04_x11 05_ext 06_xapps 07_multimedia 11_lxqt "
+      when "12_mate" then
+        ct_category << "03_libs 04_x11 05_ext 06_xapps 07_multimedia 12_mate "
+      when "13_tex" then
+        ct_category << "03_libs 04_x11 "
+      when "16_virtualization" then
+        ct_category << "03_libs "
+      end
+    end
     output_log("Installed package to container is \"#{ct_category}\"")
     @ct_category = ct_category
   end
@@ -188,8 +216,19 @@ class PkgBuild
     system(command)
     customize_ct_config(arch)
     Dir.mkdir("/var/lib/lxc/pkgbuild_#{arch}/rootfs/root/.gnupg")
-    File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1")
-    File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1.tradnet")
+    if @release == "6.x"
+      File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1")
+      File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1.tradnet")
+    end
+    if @release == "7.x"
+      FileUtils.touch("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/resolv.conf", :verbose => true)
+
+      ["rc3.d/S20network", "rc0.d/K80network", "rc6.d/K80network",
+       "rc0.d/S90localnet", "rc6.d/S90localnet", "rcS.d/S08localnet"].each do |f|
+        FileUtils.rm("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/#{f}", :verbose => true)
+      end
+      system("sed -e -i 's/-i //' /var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/init.d/halt")
+    end
   end
 
   def ct_exist?(arch)
@@ -297,7 +336,11 @@ class PkgBuild
   end
 
   def save_package(arch)
-    fullpath = Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-P*.txz").at(0)
+    levelstr = "B"
+    if @release == "6.x"
+      levelstr = "P"
+    end
+    fullpath = Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-#{levelstr}*.txz").at(0)
     p fullpath
     pkgfile = File.basename(fullpath)
     begin
@@ -323,7 +366,7 @@ end
 opts = OptionParser.new
 config = Hash.new
 
-config[:compare_branch] = "updatepkg"
+config[:compare_branch] = "update-7.x"
 opts.on("-b", "--branch BRANCH",
         "branch that compare with original branch.") {|b|
   config[:compare_branch] = b
@@ -348,15 +391,19 @@ opts.on("-k", "--keep",
         "keep the container") {|k|
   config[:keep_container] = true
 }
-config[:arch] = ["x86", "x86_64"]
-opts.on("-a", "--arch=ARCH,ARCH,...", Array,
-        "architecture(s) to create package") {|a|
-  config[:arch] = a
-}
-config[:release] = "6.x"
+config[:release] = "7.x"
 opts.on("-R", "--release RELEASE",
         "Specify release version") {|release|
   config[:release] = release
+}
+if config[:release] == "6.x"
+  config[:arch] = ["x86", "x86_64"]
+else
+  config[:arch] = ["x86_64"]
+end
+opts.on("-a", "--arch=ARCH,ARCH,...", Array,
+        "architecture(s) to create package") {|a|
+  config[:arch] = a
 }
 config[:fstype] = "dir"
 opts.on("-f", "--fstype FSTYPE",
