@@ -109,7 +109,7 @@ class PkgBuild
                     "10_xfce", "11_lxqt", "12_mate", "13_tex" "16_virtualization"]
     end
     p @addon_pkgs
-    @ignore_pkgs = "firefox thunderbird kernel kmod"
+    @ignore_pkgs = "firefox thunderbird kernel kmod "
   end
 
   def get_lxc_version
@@ -227,7 +227,7 @@ class PkgBuild
        "rc0.d/S90localnet", "rc6.d/S90localnet", "rcS.d/S08localnet"].each do |f|
         FileUtils.rm("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/#{f}", :verbose => true)
       end
-      system("sed -e -i 's/-i //' /var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/init.d/halt")
+      system("sed -i -e 's/-i //' /var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/init.d/halt")
     end
   end
 
@@ -352,7 +352,11 @@ class PkgBuild
   end
 
   def install_package(arch)
-    path_in_container = "/Plamo-src/#{@package_path}/*-P*.txz"
+    levelstr = "B"
+    if @release == "6.x"
+      levelstr = "P"
+    end
+    path_in_container = "/Plamo-src/#{@package_path}/*-#{levelstr}*.txz"
     command = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c "updatepkg -f #{path_in_container}")
     output_log("exec command: #{command}")
     if ! system(command) then
