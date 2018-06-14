@@ -437,10 +437,6 @@ if config[:arch] == nil
   end
 end
 
-  puts "====="
-  p config
-  puts "====="
-
 repo = PlamoSrc.new(config[:basedir],
                     config[:orig_branch],
                     config[:compare_branch],
