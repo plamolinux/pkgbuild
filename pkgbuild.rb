@@ -238,6 +238,11 @@ class PkgBuild
   end
 
   def start_ct(arch)
+    # workaround for plamo 7.x
+    if !File.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rcS.d/S95initpkg") then
+      command = %(#{common} "rm -vf /var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rcS.d/S95initpkg")
+    end
+
     command = "lxc-start -n pkgbuild_#{arch} -d -l #{@ct_loglevel}"
     output_log("execute \"#{command}\"")
     system(command)
