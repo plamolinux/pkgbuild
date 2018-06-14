@@ -400,13 +400,10 @@ opts.on("-R", "--release RELEASE",
         "Specify release version") {|release|
   config[:release] = release
 }
-if config[:release] == "6.x"
-  config[:arch] = ["x86", "x86_64"]
-else
-  config[:arch] = ["x86_64"]
-end
+config[:arch] = nil
 opts.on("-a", "--arch=ARCH,ARCH,...", Array,
         "architecture(s) to create package") {|a|
+  p a
   config[:arch] = a
 }
 config[:fstype] = "dir"
@@ -431,6 +428,18 @@ opts.on("-l", "--logpriority LEVEL",
 }
 
 opts.parse!(ARGV)
+
+if config[:arch] == nil
+  if config[:release] == "6.x"
+    config[:arch] = ["x86", "x86_64"]
+  else
+    config[:arch] = ["x86_64"]
+  end
+end
+
+  puts "====="
+  p config
+  puts "====="
 
 repo = PlamoSrc.new(config[:basedir],
                     config[:orig_branch],
