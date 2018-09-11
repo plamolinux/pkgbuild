@@ -139,6 +139,10 @@ class PkgBuild
       }
     elsif @release == "7.x" then
       ct_category = "00_base 01_minimum 02_devel 09_printings "
+      if @package_name.index("grub") then
+        @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2"
+        ct_category << "03_libs "
+      end
       case @package_category
       when "03_libs" then
         ct_category << "03_libs "
@@ -156,6 +160,8 @@ class PkgBuild
                 lxappearance_obconf lxde_common lxde_icon_theme lxinput \
                 lxmenu_data lxpanel lxrandr lxsession lxtask lxterminal \
                 menu_cache pcmanfm"
+      when "09_printings" then
+        ct_category << "03_libs 04_x11"
       when "10_xfce" then
         ct_category << "03_libs 04_x11 05_ext 06_xapps 07_multimedia 10_xfce "
       when "11_lxqt" then
