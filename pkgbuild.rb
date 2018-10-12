@@ -348,14 +348,14 @@ class PkgBuild
     if @release == "6.x"
       levelstr = "P"
     end
-    fullpath = Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-#{levelstr}*.txz").at(0)
-    p fullpath
-    pkgfile = File.basename(fullpath)
-    begin
-      FileUtils.copy(fullpath, "./#{pkgfile}")
-    rescue
-      return false
-    end
+    Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-#{levelstr}*.txz").each {|fullpath|
+      pkgfile = File.basename(fullpath)
+      begin
+        FileUtils.copy(fullpath, "./#{pkgfile}")
+      rescue
+        return false
+      end
+    }
     return true
   end
 
