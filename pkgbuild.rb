@@ -232,6 +232,7 @@ class PkgBuild
       FileUtils.touch("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/resolv.conf", :verbose => true)
 
       ["rc3.d/S20network", "rc0.d/K80network", "rc6.d/K80network",
+       "rc3.d/S19iptables", "rc0.d/K81iptables", "rc6.d/K81iptables",
        "rc0.d/S90localnet", "rc6.d/S90localnet", "rcS.d/S08localnet"].each do |f|
         FileUtils.rm("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/#{f}", :verbose => true)
       end
@@ -280,6 +281,13 @@ class PkgBuild
       start_ct(arch)
     end
     common = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c )
+
+    # remove all libtool archive files in the container
+    command = %(#{common} "/usr/bin/remove-la-files.sh")
+    output_log("Remove all *.la files")
+    if ! system(command) then
+      output_err("failed to remove all *.la files")
+    end
 
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
