@@ -111,7 +111,7 @@ class PkgBuild
                     "10_xfce", "11_lxqt", "12_mate", "13_tex" "16_virtualization"]
     end
     p @addon_pkgs
-    @ignore_pkgs = "firefox thunderbird kernel kmod "
+    @ignore_pkgs = "firefox thunderbird kernel "
   end
 
   def get_lxc_version
@@ -174,6 +174,7 @@ class PkgBuild
         ct_category << "03_libs 04_x11 "
       when "16_virtualization" then
         ct_category << "03_libs "
+        @addon_pkgs = "#{@addon_pkgs} plamo/05_ext/fuse2"
       end
     end
     output_log("Installed package to container is \"#{ct_category}\"")
