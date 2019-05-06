@@ -142,7 +142,7 @@ class PkgBuild
     elsif @release == "7.x" then
       ct_category = "00_base 01_minimum 02_devel 09_printings "
       if @package_name.index("grub") then
-        @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2"
+        @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2 plamo/03_libs/freetype"
         ct_category << "03_libs "
       end
       case @package_category
