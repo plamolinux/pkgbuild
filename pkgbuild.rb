@@ -404,7 +404,7 @@ opts.on("--basedir=DIR",
 }
 config[:repo] = "Plamo-src"
 opts.on("-r", "--repository=DIR",
-        "directory name of local repository") {|r|
+        "directory name of local git repository") {|r|
   config[:repo] = r
 }
 config[:keep_container] = false
@@ -443,6 +443,11 @@ opts.on("-l", "--logpriority LEVEL",
         "loglevel given to the container") {|loglevel|
   config[:loglevel] = loglevel
 }
+config[:mirror_path] = "/pub/linux/Plamo"
+opts.on("-m", "--mirror-path PATH",
+        "directory path for downloading packages") {|mirror_path|
+  config[:mirror_path] = mirror_path
+}
 
 opts.parse!(ARGV)
 
@@ -476,6 +481,7 @@ repo.get_update_pkgs.each{|pkg|
 
   build = PkgBuild.new(pkg, config[:release], config[:appendpkg])
   build.ct_loglevel = config[:loglevel]
+  build.mirror_path = config[:mirror_path]
   config[:arch].each{|a|
     if !build.ct_exist?(a) then
       output_log("create container for building #{pkg}")
