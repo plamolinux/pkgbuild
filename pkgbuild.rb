@@ -281,7 +281,11 @@ class PkgBuild
       output_log("container is not running. start container pkgbuild_#{arch}.")
       start_ct(arch)
     end
+
+    # For debug
     common = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c )
+    # common = %(lxc-attach -v GIT_CURL_VERBOSE=1 -n pkgbuild_#{arch} -- /bin/bash -c )
+
 
     # remove all libtool archive files in the container
     command = %(#{common} "/usr/bin/remove-la-files.sh")
@@ -292,10 +296,12 @@ class PkgBuild
 
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
+      sleep 30
+
       command = %(#{common} "git clone #{repo.remote_repo}")
       output_log("execute \"#{command}\"")
       if ! system(command) then
-        output_err("git clone failed")
+        output_err("git clone failed: #{$?}")
         exit 1
       end
 
