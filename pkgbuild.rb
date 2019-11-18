@@ -144,6 +144,8 @@ class PkgBuild
       if @package_name.index("grub") then
         @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2 plamo/03_libs/freetype"
         ct_category << "03_libs "
+      elsif @package_name.index("vala") then
+        @addon_pkgs = "#{@addon_pkgs} plamo/03_libs/glib"
       end
       case @package_category
       when "03_libs" then
@@ -296,6 +298,7 @@ class PkgBuild
 
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
+      output_log("Waiting for starting container")
       sleep 30
 
       command = %(#{common} "git clone #{repo.remote_repo}")
