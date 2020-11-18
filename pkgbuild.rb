@@ -195,16 +195,6 @@ class PkgBuild
     File.rename(path, path + ".orig")
     config = File.open(path, "a+")
     File.open(path + ".orig") {|io|
-      while line = io.gets
-        line.sub!(%r(^lxc.network.), "#lxc.network.")
-        line.sub!(%r(^lxc.net.), "#lxc.net.")
-        config.puts(line)
-      end
-      if get_lxc_version >= 3
-        config.puts("lxc.net.0.type = none")
-      else
-        config.puts("lxc.network.type = none")
-      end
       config.puts("lxc.mount.entry = #{ENV['HOME']}/.gnupg root/.gnupg none bind 0 0")
       config.puts("lxc.mount.entry = /etc/resolv.conf etc/resolv.conf none bind 0 0")
     }
@@ -225,19 +215,8 @@ class PkgBuild
     system(command)
     customize_ct_config(arch)
     Dir.mkdir("/var/lib/lxc/pkgbuild_#{arch}/rootfs/root/.gnupg")
-    if @release == "6.x"
-      File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1")
-      File.unlink("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/rc.inet1.tradnet")
-    end
     if @release == "7.x"
       FileUtils.touch("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/resolv.conf", :verbose => true)
-
-      ["rc3.d/S20network", "rc0.d/K80network", "rc6.d/K80network",
-       "rc3.d/S19iptables", "rc0.d/K81iptables", "rc6.d/K81iptables",
-       "rc0.d/S90localnet", "rc6.d/S90localnet", "rcS.d/S08localnet"].each do |f|
-        FileUtils.rm("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/#{f}", :verbose => true)
-      end
-      system("sed -i -e 's/-i //' /var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/rc.d/init.d/halt")
     end
   end
 
