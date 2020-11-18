@@ -142,8 +142,10 @@ class PkgBuild
     elsif @release == "7.x" then
       ct_category = "00_base 01_minimum 02_devel 09_printings "
       if @package_name.index("grub") then
-        @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2"
+        @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2 plamo/03_libs/freetype"
         ct_category << "03_libs "
+      elsif @package_name.index("vala") then
+        @addon_pkgs = "#{@addon_pkgs} plamo/03_libs/glib"
       end
       case @package_category
       when "03_libs" then
@@ -260,7 +262,11 @@ class PkgBuild
       output_log("container is not running. start container pkgbuild_#{arch}.")
       start_ct(arch)
     end
+
+    # For debug
     common = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c )
+    # common = %(lxc-attach -v GIT_CURL_VERBOSE=1 -n pkgbuild_#{arch} -- /bin/bash -c )
+
 
     # remove all libtool archive files in the container
     command = %(#{common} "/usr/bin/remove-la-files.sh")
@@ -271,10 +277,13 @@ class PkgBuild
 
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
+      output_log("Waiting for starting container")
+      sleep 30
+
       command = %(#{common} "git clone #{repo.remote_repo}")
       output_log("execute \"#{command}\"")
       if ! system(command) then
-        output_err("git clone failed")
+        output_err("git clone failed: #{$?}")
         exit 1
       end
 
@@ -383,7 +392,7 @@ opts.on("--basedir=DIR",
 }
 config[:repo] = "Plamo-src"
 opts.on("-r", "--repository=DIR",
-        "directory name of local repository") {|r|
+        "directory name of local git repository") {|r|
   config[:repo] = r
 }
 config[:keep_container] = false
@@ -422,6 +431,11 @@ opts.on("-l", "--logpriority LEVEL",
         "loglevel given to the container") {|loglevel|
   config[:loglevel] = loglevel
 }
+config[:mirror_path] = "/pub/linux/Plamo"
+opts.on("-m", "--mirror-path PATH",
+        "directory path for downloading packages") {|mirror_path|
+  config[:mirror_path] = mirror_path
+}
 
 opts.parse!(ARGV)
 
@@ -455,6 +469,7 @@ repo.get_update_pkgs.each{|pkg|
 
   build = PkgBuild.new(pkg, config[:release], config[:appendpkg])
   build.ct_loglevel = config[:loglevel]
+  build.mirror_path = config[:mirror_path]
   config[:arch].each{|a|
     if !build.ct_exist?(a) then
       output_log("create container for building #{pkg}")
