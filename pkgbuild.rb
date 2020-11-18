@@ -194,12 +194,10 @@ class PkgBuild
 
   def customize_ct_config(arch)
     path = "/var/lib/lxc/pkgbuild_#{arch}/config"
-    File.rename(path, path + ".orig")
+    FileUtils.cp(path, path + ".orig")
     config = File.open(path, "a+")
-    File.open(path + ".orig") {|io|
-      config.puts("lxc.mount.entry = #{ENV['HOME']}/.gnupg root/.gnupg none bind 0 0")
-      config.puts("lxc.mount.entry = /etc/resolv.conf etc/resolv.conf none bind 0 0")
-    }
+    config.puts("lxc.mount.entry = #{ENV['HOME']}/.gnupg root/.gnupg none bind 0 0")
+    config.puts("lxc.mount.entry = /etc/resolv.conf etc/resolv.conf none bind 0 0")
     config.close
   end
 
