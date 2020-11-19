@@ -454,7 +454,7 @@ opts.on("-l", "--logpriority LEVEL",
 }
 config[:mirror_path] = "/pub/linux/Plamo"
 opts.on("-m", "--mirror-path PATH",
-        "directory path for downloading packages") {|mirror_path|
+        "directory path for downloading packages(ex. /pub/linux/Plamo)") {|mirror_path|
   config[:mirror_path] = mirror_path
 }
 
