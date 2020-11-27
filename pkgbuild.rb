@@ -275,7 +275,7 @@ class PkgBuild
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
       output_log("Waiting for starting container")
-      sleep 30
+      sleep 45
 
       command = %(#{common} "git clone #{repo.remote_repo}")
       output_log("execute \"#{command}\"")
