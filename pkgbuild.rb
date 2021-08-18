@@ -275,7 +275,7 @@ class PkgBuild
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
       output_log("Waiting for starting container")
-      sleep 45
+      sleep 80
 
       command = %(#{common} "git clone #{repo.remote_repo}")
       output_log("execute \"#{command}\"")
@@ -342,7 +342,7 @@ class PkgBuild
     if @release == "6.x"
       levelstr = "P"
     end
-    Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-#{levelstr}*.txz").each {|fullpath|
+    Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-#{levelstr}*.t*").each {|fullpath|
       pkgfile = File.basename(fullpath)
       begin
         FileUtils.copy(fullpath, "./#{pkgfile}")
@@ -358,7 +358,7 @@ class PkgBuild
     if @release == "6.x"
       levelstr = "P"
     end
-    path_in_container = "/Plamo-src/#{@package_path}/*-#{levelstr}*.txz"
+    path_in_container = "/Plamo-src/#{@package_path}/*-#{levelstr}*.t*"
     command = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c "updatepkg -f #{path_in_container}")
     output_log("exec command: #{command}")
     if ! system(command) then
