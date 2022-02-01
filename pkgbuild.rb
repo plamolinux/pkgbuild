@@ -106,7 +106,7 @@ class PkgBuild
     elsif @release == "7.x" then
       # These addon pkgs needs from docbook2man
       @addon_pkgs = "#{addon} plamo/05_ext/perl_Parse_Yapp plamo/05_ext/perl_XML_NamespaceSupport plamo/03_libs/libxslt \
-            plamo/05_ext/perl_SGMLSpm plamo/05_ext/perl_XML_SAX plamo/05_ext/perl_URI plamo/05_ext/perl_XML_SAX_Base"
+            plamo/05_ext/perl_SGMLSpm plamo/05_ext/perl_XML_SAX plamo/05_ext/perl_URI plamo/05_ext/perl_XML_SAX_Base plamo/05_ext/bind_tools"
       @@category = ["03_libs", "04_x11", "05_ext", "06_xapps", "07_multimedia", "08_daemons",
                     "10_xfce", "11_lxqt", "12_mate", "13_tex" "16_virtualization"]
     end
@@ -252,6 +252,23 @@ class PkgBuild
     end
   end
 
+  def check_network(arch)
+    command = %(lxc-attach -n pkgbuild_#{arch} -- /bin/bash -c "dig github.com")
+    cnt = 0
+    output_log("Check network is alive")
+    while ! system(command) do
+      sleep 5
+      cnt = cnt + 1
+      putc('.')
+      if cnt > 20 then
+        output_err("cannot resolv github.com")
+        exit 1
+      end
+    end
+    output_log("Network is OK")
+    return true
+  end
+
   def build_pkg(pkg, arch, branch)
     repo = PlamoSrc.new
     repo.compare_branch = branch
@@ -275,7 +292,7 @@ class PkgBuild
     # clone Plamo-src if not exists
     if !Dir.exist?("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src") then
       output_log("Waiting for starting container")
-      sleep 80
+      check_network(arch)
 
       command = %(#{common} "git clone #{repo.remote_repo}")
       output_log("execute \"#{command}\"")
