@@ -49,8 +49,8 @@ class PlamoSrc
 
   def fetch_compare_branch
     Dir.chdir(@local_repo) {
-      output_log("git fetch origin #{@compare_branch}")
-      system("git fetch origin #{@compare_branch}")
+      output_log("git fetch origin")
+      system("git fetch origin")
     }
   end
 
@@ -91,6 +91,7 @@ class PkgBuild
   attr_accessor :mirror_srv
   attr_accessor :mirror_path
   attr_accessor :release
+  attr_accessor :majorver
   attr_accessor :addon_pkgs
   attr_accessor :ct_loglevel
 
@@ -99,14 +100,15 @@ class PkgBuild
     @mirror_srv = "repository.plamolinux.org"
     @mirror_path = "/pub/linux/Plamo"
     @release = release
-    if @release == "6.x" then
+    @majorver = @release[0].to_i
+    if @majorver == 6 then
       @addon_pkgs = "plamo/05_ext/devel2.txz/git plamo/02_x11/expat #{addon}"
       @@category = ["02_x11", "03_xclassics", "04_xapps",
                     "05_ext", "06_xfce", "07_kde", "11_mate", "08_tex"]
-    elsif @release == "7.x" then
+    elsif @majorver >= 7 then
       # These addon pkgs needs from docbook2man
       @addon_pkgs = "#{addon} plamo/05_ext/perl_Parse_Yapp plamo/05_ext/perl_XML_NamespaceSupport plamo/03_libs/libxslt \
-            plamo/05_ext/perl_SGMLSpm plamo/05_ext/perl_XML_SAX plamo/05_ext/perl_URI plamo/05_ext/perl_XML_SAX_Base plamo/05_ext/bind_tools"
+            plamo/05_ext/perl_SGMLSpm plamo/05_ext/perl_XML_SAX plamo/05_ext/perl_URI plamo/05_ext/perl_XML_SAX_Base plamo/05_ext/bind_tools plamo/03_libs/json_c"
       @@category = ["03_libs", "04_x11", "05_ext", "06_xapps", "07_multimedia", "08_daemons",
                     "10_xfce", "11_lxqt", "12_mate", "13_tex" "16_virtualization"]
     end
@@ -125,7 +127,7 @@ class PkgBuild
   end
 
   def define_ct_category
-    if @release == "6.x" then
+    if @majorver == 6 then
       ct_category = "00_base 01_minimum 05_ext/docbook.txz "
       if @package_category == "00_base" ||
          @package_category == "01_minimum" ||
@@ -139,7 +141,7 @@ class PkgBuild
           break
         end
       }
-    elsif @release == "7.x" then
+    elsif @majorver >= 7 then
       ct_category = "00_base 01_minimum 02_devel 09_printings "
       if @package_name.index("grub") then
         @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2 plamo/03_libs/freetype"
@@ -214,7 +216,7 @@ class PkgBuild
     system(command)
     customize_ct_config(arch)
     Dir.mkdir("/var/lib/lxc/pkgbuild_#{arch}/rootfs/root/.gnupg")
-    if @release == "7.x"
+    if @majorver >= 7 then
       FileUtils.touch("/var/lib/lxc/pkgbuild_#{arch}/rootfs/etc/resolv.conf", :verbose => true)
     end
   end
@@ -356,7 +358,7 @@ class PkgBuild
 
   def save_package(arch)
     levelstr = "B"
-    if @release == "6.x"
+    if @majorver == 6 then
       levelstr = "P"
     end
     Dir.glob("/var/lib/lxc/pkgbuild_#{arch}/rootfs/Plamo-src/#{@package_path}/*-#{levelstr}*.t*").each {|fullpath|
@@ -372,7 +374,7 @@ class PkgBuild
 
   def install_package(arch)
     levelstr = "B"
-    if @release == "6.x"
+    if @majorver == 6 then
       levelstr = "P"
     end
     path_in_container = "/Plamo-src/#{@package_path}/*-#{levelstr}*.t*"
