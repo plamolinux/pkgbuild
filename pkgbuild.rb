@@ -148,6 +148,10 @@ class PkgBuild
         ct_category << "03_libs "
       elsif @package_name.index("vala") then
         @addon_pkgs = "#{@addon_pkgs} plamo/03_libs/glib"
+      elsif @package_name.index("sqlite") then
+        @addon_pkgs = "#{@addon_pkgs} plamo/06_xapps/tcl"
+      elsif @package_name.index("gtk4") then
+        @addon_pkgs = "#{@addon_pkgs} plamo/07_multimedia/gstreamer.txz/gst_plugins_bad plamo/07_multimedia/gstreamer.txz/gstreamer plamo/07_multimedia/gstreamer.txz/orc plamo/07_multimedia/gstreamer.txz/gst_plugins_base"
       end
       case @package_category
       when "03_libs" then
@@ -181,7 +185,8 @@ class PkgBuild
         @addon_pkgs = "#{@addon_pkgs} plamo/05_ext/fuse2"
       end
     end
-    output_log("Installed package to container is \"#{ct_category}\"")
+    output_log("Installed packages to container are \"#{ct_category}\"")
+    output_log("Addon packages are \"#{@addon_pkgs}\"")
     @ct_category = ct_category
   end
 
