@@ -19,8 +19,8 @@ class PlamoSrc
   attr_accessor :update_pkgs
 
   def initialize(basedir=".",
-                 orig_branch="plamo-7.x",
-                 compare_branch="update-7.x",
+                 orig_branch="plamo-8.x",
+                 compare_branch="update-8.x",
                  repo="Plamo-src",
                  remote_repo="https://github.com/plamolinux/Plamo-src.git")
 
@@ -396,12 +396,12 @@ end
 opts = OptionParser.new
 config = Hash.new
 
-config[:compare_branch] = "update-7.x"
+config[:compare_branch] = "update-8.x"
 opts.on("-b", "--branch BRANCH",
         "branch that compare with original branch.") {|b|
   config[:compare_branch] = b
 }
-config[:orig_branch] = "plamo-7.x"
+config[:orig_branch] = "plamo-8.x"
 opts.on("-o", "--orig ORIG_BRANCH",
         "original branch") {|o|
   config[:orig_branch] = o
@@ -421,7 +421,7 @@ opts.on("-k", "--keep",
         "keep the container") {|k|
   config[:keep_container] = true
 }
-config[:release] = "7.x"
+config[:release] = "8.x"
 opts.on("-R", "--release RELEASE",
         "Specify release version") {|release|
   config[:release] = release
