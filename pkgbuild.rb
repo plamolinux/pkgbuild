@@ -108,7 +108,7 @@ class PkgBuild
     elsif @majorver >= 7 then
       # These addon pkgs needs from docbook2man
       @addon_pkgs = "#{addon} plamo/05_ext/perl_Parse_Yapp plamo/05_ext/perl_XML_NamespaceSupport plamo/03_libs/libxslt \
-            plamo/05_ext/perl_SGMLSpm plamo/05_ext/perl_XML_SAX plamo/05_ext/perl_URI plamo/05_ext/perl_XML_SAX_Base plamo/05_ext/bind_tools plamo/03_libs/json_c"
+            plamo/05_ext/perl_SGMLSpm plamo/05_ext/perl_XML_SAX plamo/05_ext/perl_URI plamo/05_ext/perl_XML_SAX_Base plamo/05_ext/bind_tools plamo/03_libs/json_c plamo/03_libs/nss"
       @@category = ["03_libs", "04_x11", "05_ext", "06_xapps", "07_multimedia", "08_daemons",
                     "10_xfce", "11_lxqt", "12_mate", "13_tex" "16_virtualization"]
     end
