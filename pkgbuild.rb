@@ -152,6 +152,8 @@ class PkgBuild
         @addon_pkgs = "#{@addon_pkgs} plamo/06_xapps/tcl"
       elsif @package_name.index("gtk4") then
         @addon_pkgs = "#{@addon_pkgs} plamo/07_multimedia/gstreamer.txz/gst_plugins_bad plamo/07_multimedia/gstreamer.txz/gstreamer plamo/07_multimedia/gstreamer.txz/orc plamo/07_multimedia/gstreamer.txz/gst_plugins_base"
+      elsif @package_name.index("source_highlight") then
+        @addon_pkgs = "#{@addon_pkgs} plamo/03_libs/boost"
       end
       case @package_category
       when "03_libs" then
