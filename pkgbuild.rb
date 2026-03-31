@@ -144,7 +144,7 @@ class PkgBuild
     elsif @majorver >= 7 then
       ct_category = "00_base 01_minimum 02_devel 09_printings "
       if @package_name.index("grub") then
-        @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse2 plamo/03_libs/freetype"
+        @addon_pkgs = "#{@addon_pkgs} plamo/04_x11/fonts.txz/dejavu_fonts_ttf plamo/05_ext/fuse3 plamo/03_libs/freetype"
         ct_category << "03_libs "
       elsif @package_name.index("vala") then
         @addon_pkgs = "#{@addon_pkgs} plamo/03_libs/glib"
